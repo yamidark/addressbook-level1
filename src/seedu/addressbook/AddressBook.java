@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -128,6 +129,10 @@ public class AddressBook {
     private static final String COMMAND_EXIT_WORD = "exit";
     private static final String COMMAND_EXIT_DESC = "Exits the program.";
     private static final String COMMAND_EXIT_EXAMPLE = COMMAND_EXIT_WORD;
+    
+    private static final String COMMAND_SORT_WORD = "sort";
+	private static final String COMMAND_SORT_DESC = "Sorts the address book according to alphabetical order";
+	private static final String COMMAND_SORT_EXAMPLE = COMMAND_SORT_WORD;
 
     private static final String DIVIDER = "===================================================";
 
@@ -337,6 +342,8 @@ public class AddressBook {
             return executeClearAddressBook();
         case COMMAND_HELP_WORD:
             return getUsageInfoForAllCommands();
+        case COMMAND_SORT_WORD:
+			return executeSortAddressBook();
         case COMMAND_EXIT_WORD:
             executeExitProgramRequest();
         default:
@@ -385,7 +392,17 @@ public class AddressBook {
         addPersonToAddressBook(personToAdd);
         return getMessageForSuccessfulAddPerson(personToAdd);
     }
-
+    
+    private static String executeSortAddressBook() {
+		ALL_PERSONS.sort(AddressBookComparator);
+		return getMessageForSuccessfulSorting();
+	}
+    
+    private static String getMessageForSuccessfulSorting() {
+		// TODO Auto-generated method stub
+		return "Address Book has been sorted";
+	}
+    
     /**
      * Constructs a feedback message for a successful add person command execution.
      *
@@ -440,9 +457,13 @@ public class AddressBook {
      */
     private static ArrayList<HashMap<PersonProperty,String>> getPersonsWithNameContainingAnyKeyword(Collection<String> keywords) {
         final ArrayList<HashMap<PersonProperty,String>> matchedPersons = new ArrayList<>();
+        Set<String> smallLetterKeywords = new HashSet<String>();
+        for (String keyword: keywords) {
+        	smallLetterKeywords.add(keyword.toLowerCase());
+        }
         for (HashMap<PersonProperty,String> person : getAllPersonsInAddressBook()) {
-            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
-            if (!Collections.disjoint(wordsInName, keywords)) {
+            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person).toLowerCase()));
+            if (!Collections.disjoint(wordsInName, smallLetterKeywords)) {
                 matchedPersons.add(person);
             }
         }
@@ -1172,5 +1193,13 @@ public class AddressBook {
     private static ArrayList<String> splitByWhitespace(String toSplit) {
         return new ArrayList(Arrays.asList(toSplit.trim().split("\\s+")));
     }
+    
+    private static Comparator<HashMap<PersonProperty,String>> AddressBookComparator = new Comparator<HashMap<PersonProperty,String>>() {
 
+		@Override
+		public int compare(HashMap<PersonProperty, String> first, HashMap<PersonProperty, String> second) {
+			// TODO Auto-generated method stub
+			return first.get(PersonProperty.NAME).toLowerCase().compareTo(second.get(PersonProperty.NAME).toLowerCase());
+		}
+	};
 }
